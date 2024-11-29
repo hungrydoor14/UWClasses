@@ -10,13 +10,6 @@ app = Flask(__name__)
 # DF to use
 df = pd.DataFrame()
 
-"""
-SOURCES USED:
-    Source 1 : https://stackoverflow.com/questions/2360598/how-do-i-unescape-html-entities-in-a-string-in-python-3-1/3796917
-    Source 2 : Gurmail Singh, class example on Flask
-
-"""
-
 def scrape_departments_and_courses():
     """
     This will grab the info from the "courses" site, which will be the departments that the classes
