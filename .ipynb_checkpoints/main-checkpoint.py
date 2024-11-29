@@ -4,6 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import html
+
 app = Flask(__name__)
 
 # DF to use
@@ -18,7 +19,7 @@ SOURCES USED:
 
 def scrape_departments_and_courses():
     """
-    This def will grab the info from the "courses" site, which will be the departments that the classes
+    This will grab the info from the "courses" site, which will be the departments that the classes
     go into. 
     """
     global df
@@ -42,7 +43,7 @@ def scrape_departments_and_courses():
             for item in items:
                 # this will grab the info inside the href (that holds name and course abbreviations)
                     # <li><a href="/courses/acct_i_s/">Accounting and Information Systems (ACCT I S)</a></li>
-                pattern = r'<li><a href="/courses/(.*?)/">(.+?) \((.+?)\)</a></li>'
+                pattern = r'<li><a href="/courses/(.*?)/">(.+?) \(([^)]+)\)</a></li>'
                 match = re.match(pattern, str(item))
                 #print(item)            
 
@@ -53,6 +54,7 @@ def scrape_departments_and_courses():
 
                     # SOURCE 1: Fix issue with amps like "ANAT&amp;PHY"
                     dep_abbrev = html.unescape(dep_abbrev)
+                    dep_name = html.unescape(dep_name)
                     
                     dep_url = f"https://guide.wisc.edu/courses/{dep_id}/"
 
