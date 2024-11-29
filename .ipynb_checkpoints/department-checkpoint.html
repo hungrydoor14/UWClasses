@@ -2,12 +2,19 @@
 <html>
 <head>
     <title>{{ department_name }} </title>
+    <style>
+        /* Source: internet */
+        body {
+            font-family: quattrocento, sans-serif;
+        }
+    </style>
 </head>
 <body>
     <h1>Courses for {{ department_name }}</h1>
-    <ul>
-        {{ course_list }}
-    </ul>
+    <p> {{ courses amount }} courses. </p>
+    
+    <p>{{ course_list }}</p>
+    
     <a href="/">Back to Departments</a>
 </body>
 </html>

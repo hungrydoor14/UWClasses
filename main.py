@@ -93,7 +93,7 @@ def gather_courses(department):
             # found issue with Zero Width Space, this is how to fix
             course_title = course_title.replace("\u200B", "")    
             
-            pattern = r"([A-Za-z&\/\s0-9]+)\s*(\d{3})\s*—\s*(.+)"
+            pattern = r"([A-Za-z&\-\/\s0-9]+)\s*(\d{3})\s*—\s*(.+)"
             match = re.match(pattern, course_title)
             
             if match:
@@ -109,12 +109,25 @@ def gather_courses(department):
             if match:
                 course_details["CREDITS"] = match.group(1)
                 
-            # More info section
-                # Load "cb-extras" class from course
-            course_extras = course.find_all('p', class_='courseblockextra noindent clearfix')
-            #print(course_extras)
+            # EXTRAS
+            course_extras = course.find('div', class_='cb-extras')
+            print(course_extras)
+            course_extras = course.find('div', class_='cb-extras')
+            if course_extras:
+                extras = []
+                for extra in course_extras.find_all('p', class_='courseblockextra noindent clearfix'):
+                    label = extra.find('span', class_='cbextra-label')
+                    data = extra.find('span', class_='cbextra-data')
+                    if label and data:
+                        print(label.text.strip())
+                        label_text = label.text.strip()
+                        if label_text != "Learning Outcomes:":  # Exclude specific extras
+                            extras.append(f"<strong>{label_text}</strong> {data.text.strip()}")
+                course_details["EXTRAS"] = " \n ".join(extras)
+            else:
+                course_details["EXTRAS"] = "None"
                 
-            # DESC - Not sure if I should include in df
+            # DESC 
             course_details["DESCRIPTION"] = course.find("p", class_="courseblockdesc noindent").text.strip()
            
             # append course
@@ -125,6 +138,7 @@ def gather_courses(department):
         
     else:
         print("Not in DataFrame")
+        return pd.DataFrame()
     
 @app.route('/')
 def home():
@@ -146,6 +160,7 @@ def home():
         <li><a href='/department/{dept["ID"]}'>{dept["DEPARTMENT"]}</a></li>
         """
     html = html.replace("{{ departments }}", department_list)
+    html = html.replace("{{ department amount }}", str(len(departments)))
     
     return html
 
@@ -172,10 +187,23 @@ def department_page(dept_id):
     # Create the course list HTML
     course_list = ""
     for _, course in courses.iterrows():
+        extras_list = course["EXTRAS"].split(" \n ") if course["EXTRAS"] != "None" else []
+        
+        # Convert the extras into a li
+        extras_html = ""
+        if extras_list:
+            extras_html = "<ul>" + "".join(f"<li>{extra}</li>" for extra in extras_list) + "</ul>"
+        else:
+            extras_html = "<em>No additional information available.</em>"
+            
         course_list += f"""
-        <li>
-            <strong>{course['ABBREV']}</strong>: {course['NAME']} ({course['CREDITS']} credits)
-        </li>
+            <h3><strong>{course["ABBREV"]}</strong>: {course["NAME"]} </h3>
+            <strong>Credits:</strong> {course['CREDITS']} <br> 
+            <strong>Description:</strong> {course["DESCRIPTION"]} <br> 
+            <br>
+            <strong> More information </strong> <br>
+            {extras_html} <br>
+        
         """
 
     # Load the department template
@@ -185,6 +213,7 @@ def department_page(dept_id):
     # Replace placeholders in the template
     html = html.replace("{{ department_name }}", department_name)
     html = html.replace("{{ course_list }}", course_list)
+    html = html.replace("{{ courses amount }}", str(len(courses)))
 
     return html
 
