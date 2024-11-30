@@ -6,6 +6,7 @@ import json
     FROM ALL OF UW-MADISON HISTORY!!!
 """
 
+# Source 3: used what the API told me to access the information of all courses. 
 def fetch_all_courses(base_url, token):
     # List to store all course data
     all_courses = []
@@ -30,8 +31,6 @@ def fetch_all_courses(base_url, token):
         
         # Update the URL to the next page, if it exists
         url = data.get('nextPageUrl')  # This assumes the API uses 'next' as the key for pagination
-        
-        # Debug print to check if the next page URL is correct
         #print("Next page URL:", url)
     
     # Save the collected course data to a JSON file

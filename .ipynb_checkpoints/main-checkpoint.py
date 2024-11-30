@@ -89,8 +89,12 @@ def gather_courses(department):
             # found issue with Zero Width Space, this is how to fix
             course_title = course_title.replace("\u200B", "")    
             
-            pattern = r"([A-Za-z&\-\/\s0-9]+)\s*(\d{3})\s*—\s*(.+)"
+                # old pattern: unsure why 0-9 was in there
+                # pattern = r"([A-Za-z&\-\/\s0-9]+)\s*(\d+)\s*—\s*(.+)"
+            
+            pattern = r"([A-Za-z&\-\/\s]+)(\d+)\s*[-—]\s*(.+)"
             match = re.match(pattern, course_title)
+            print(course_title)
             
             if match:
                 #course_details["DEP_COURSE"] = match.group(1)
