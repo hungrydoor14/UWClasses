@@ -4,11 +4,16 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import html
+import json
 
 app = Flask(__name__)
 
-# DF to use
+# main DF to use
 df = pd.DataFrame()
+
+# MadGrades db
+with open("all_courses.json", 'r', encoding='utf-8') as file:
+    courses = json.load(file)    
 
 # Attempt at using MadGrades API 
 API_TOKEN = "9766d059e02f47c4a5fda3ccd4b83eca"
@@ -94,7 +99,7 @@ def gather_courses(department):
             
             pattern = r"([A-Za-z&\-\/\s]+)(\d+)\s*[-—]\s*(.+)"
             match = re.match(pattern, course_title)
-            print(course_title)
+            #print(course_title)
             
             if match:
                 #course_details["DEP_COURSE"] = match.group(1)
@@ -111,7 +116,7 @@ def gather_courses(department):
                 
             # EXTRAS
             course_extras = course.find('div', class_='cb-extras')
-            print(course_extras)
+            #print(course_extras)
             course_extras = course.find('div', class_='cb-extras')
             if course_extras:
                 extras = []
@@ -119,7 +124,7 @@ def gather_courses(department):
                     label = extra.find('span', class_='cbextra-label')
                     data = extra.find('span', class_='cbextra-data')
                     if label and data:
-                        print(label.text.strip())
+                        #print(label.text.strip())
                         label_text = label.text.strip()
                         if label_text != "Learning Outcomes:":  # Exclude specific extras
                             extras.append(f"<strong>{label_text}</strong> {data.text.strip()}")
@@ -140,6 +145,88 @@ def gather_courses(department):
         print("Not in DataFrame")
         return pd.DataFrame()
     
+def get_madgrades_course(abbrev, code):
+    """
+    Searches for courses in the 'courses' list that have a subject with the given abbreviation
+    and whose course number matches the given code. Returns course that matches
+
+    Parameters:
+    abbrev (str): The abbreviation of the subject to search for.
+    code (str or int): The course number to match against the course's number.
+
+    Returns:
+    dict: First item of a list of courses where a matching subject with the given abbreviation and code is found.
+    """
+    found_courses = []
+    
+    for course in courses:
+        number = course.get("number")
+        #print(abbrev, code)
+        #print(course)
+        for subject in course.get('subjects'):
+            if int(number) == int(code) and subject.get("abbreviation") == abbrev:
+                found_courses.append(course)
+                break  
+                
+    return found_courses[0]
+
+def get_madgrades_grades(course):
+    grades_url = course["url"] + "/grades"
+    #print(grades_url)
+    headers = {
+        'Authorization': 'Token token=9766d059e02f47c4a5fda3ccd4b83eca'
+    }
+    response = requests.get(grades_url, headers=headers)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(response.status_code)
+        return
+
+def filter_grades(grades):
+    """
+    Barebones implementation of a filtering system to remove unneeded counts from percentages
+    """
+    filtered = {}
+    filtered["aCount"] = grades["aCount"]
+    filtered["abCount"] = grades["abCount"]
+    filtered["bCount"] = grades["bCount"]
+    filtered["bcCount"] = grades["bcCount"]
+    filtered["cCount"] = grades["cCount"]
+    filtered["dCount"] = grades["dCount"]
+    filtered["fCount"] = grades["fCount"]
+    
+    return filtered
+
+def calculate_gpa(grades):
+    """
+    Calculate GPA using the GPA scale provided by UW-Madison, using a filtered list ONLY containing the letter
+    grades
+    """
+    # Define the grade points
+    grade_points = {
+        'aCount': 4.0,
+        'abCount': 3.5,
+        'bCount': 3.0,
+        'bcCount': 2.5,
+        'cCount': 2.0,
+        'dCount': 1.0,
+        'fCount': 0.0
+    }
+
+    # Calculate the total weighted points and the total count of grades
+    total_points = 0
+    total_count = 0
+    
+    for grade, count in grades.items():
+        total_points += count * grade_points[grade]
+        total_count += count
+    
+    # Calculate GPA
+    gpa = total_points / total_count if total_count > 0 else 0
+    return round(gpa, 2)
+    
 @app.route('/')
 def home():
     global df
@@ -150,7 +237,7 @@ def home():
         
     # provide dept and id as thats all I need here for now
     departments = df.to_dict(orient="records")
-    print(df)
+    #print(df)
 
     department_list = ""
     
@@ -196,14 +283,45 @@ def department_page(dept_id):
         else:
             extras_html = "<em>No additional information available.</em>"
             
+        #print(course)
+        #print(department_abbrev)
+        #print(course["ID"])
+        
+        # Get the MadGrades objects
+        try:
+            madgrades_course = get_madgrades_course(department_abbrev, course["ID"])
+            madgrades_grades = get_madgrades_grades(madgrades_course)
+        except Exception as e:
+            madgrades_grades = None
+            
+        # Generate the grade distribution or a "No data" message
+        if madgrades_grades and "cumulative" in madgrades_grades:
+            grade_distribution = {}
+            for grade in madgrades_grades["cumulative"]:
+                total = madgrades_grades["cumulative"].get("total", 1)
+                score = round((madgrades_grades["cumulative"][grade] / total) * 100, 2) if total > 0 else 0
+                grade_distribution[grade] = score
+
+            filtered_grade_distribution = filter_grades(grade_distribution)
+            madgrades_gpa = calculate_gpa(filtered_grade_distribution)
+            
+            madgrades_html = f"""
+                <strong>MadGrades Data:</strong> <br>
+                {filtered_grade_distribution}
+            """
+        else:
+            madgrades_html = "<strong>No MadGrades data available.</strong>"
+            
         course_list += f"""
             <h3><strong>{course["ABBREV"]}</strong>: {course["NAME"]} </h3>
             <strong>Credits:</strong> {course['CREDITS']} <br> 
             <strong>Description:</strong> {course["DESCRIPTION"]} <br> 
             <br>
             <strong> More information </strong> <br>
-            {extras_html} <br>
-        
+            {extras_html} 
+            <strong> MadGrades </strong> <br>
+            {filtered_grade_distribution}
+            <strong> GPA: </strong> {madgrades_gpa}
         """
 
     # Load the department template

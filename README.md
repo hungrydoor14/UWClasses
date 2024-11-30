@@ -12,10 +12,13 @@ This project, started on November 25, 2024, is a learning opportunity to:
 - Produce my own json datasets for use on the project
 
 # Features
+Website features
 - Homepage (/): Displays a list of all departments at UW-Madison.
 - Department Page (/department/DEPARTMENT-ID): Shows available courses for a selected department based on scraped data.
 - Debug Page (/scrape): Used to verify the success of the scraping process.
+Other features
 - all_courses.json : JSON file produced by me holding MadGrade's dataset of all UW-Madison courses (as of Nov. 30, 2024)
+- fetch_all_courses(base_url, token) : used to create all_courses.json
 
 # Routes
 | **Route**                 | **Description**                                   | **Example Usage**       |
@@ -29,7 +32,8 @@ This project, started on November 25, 2024, is a learning opportunity to:
 - BeautifulSoup4
 - Requests
 - Pandas
-- Html
+- html
+- json
 
 ## Credits
 Every source will be listed below, and a comment highlighting what source was used at the time will be on the files.

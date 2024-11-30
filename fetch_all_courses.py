@@ -40,5 +40,7 @@ def fetch_all_courses(base_url, token):
     print(f"Fetched {len(all_courses)} courses and saved to 'all_courses.json'")
     return all_courses
 
-#base_url = 'https://api.madgrades.com/v1/courses'
-#all_courses = fetch_all_courses(base_url, TOKEN_I_WON'T_GIVE_U)
+# Example: 
+    # base_url = 'https://api.madgrades.com/v1/courses'
+    # token = "GOTTEM"
+    # all_courses = fetch_all_courses(base_url, token)
