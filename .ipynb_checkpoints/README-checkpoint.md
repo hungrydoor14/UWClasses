@@ -6,6 +6,7 @@ This project, started on November 25, 2024, is a learning opportunity to:
 - Gain experience with Flask for web development.
 - Learn and apply web scraping techniques.
 - Practice HTML for building a basic user interface.
+- Practice using API with Python (using MadGrades API).
 
 # Features
 - Homepage (/): Displays a list of all departments at UW-Madison.
@@ -14,7 +15,7 @@ This project, started on November 25, 2024, is a learning opportunity to:
 
 # Routes
 | **Route**                 | **Description**                                   | **Example Usage**       |
-|---------------------------|:------------------------------------------------:|------------------------:|
+|---------------------------|------------------------------------------------|------------------------|
 | `/`                       | Displays a list of all departments.              | Visit the homepage.     |
 | `/department/DEPARTMENT-ID` | Shows courses for a specific department.        | `/department/comp_sci`        |
 | `/scrape`                 | Verifies if scraping is successful.   

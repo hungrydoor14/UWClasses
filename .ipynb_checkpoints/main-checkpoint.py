@@ -10,6 +10,9 @@ app = Flask(__name__)
 # DF to use
 df = pd.DataFrame()
 
+# Attempt at using MadGrades API 
+API_TOKEN = "9766d059e02f47c4a5fda3ccd4b83eca"
+
 def scrape_departments_and_courses():
     """
     This will grab the info from the "courses" site, which will be the departments that the classes
