@@ -283,35 +283,6 @@ def department_page(dept_id):
         else:
             extras_html = "<em>No additional information available.</em>"
             
-        #print(course)
-        #print(department_abbrev)
-        #print(course["ID"])
-        
-        # Get the MadGrades objects
-        try:
-            madgrades_course = get_madgrades_course(department_abbrev, course["ID"])
-            madgrades_grades = get_madgrades_grades(madgrades_course)
-        except Exception as e:
-            madgrades_grades = None
-            
-        # Generate the grade distribution or a "No data" message
-        if madgrades_grades and "cumulative" in madgrades_grades:
-            grade_distribution = {}
-            for grade in madgrades_grades["cumulative"]:
-                total = madgrades_grades["cumulative"].get("total", 1)
-                score = round((madgrades_grades["cumulative"][grade] / total) * 100, 2) if total > 0 else 0
-                grade_distribution[grade] = score
-
-            filtered_grade_distribution = filter_grades(grade_distribution)
-            madgrades_gpa = calculate_gpa(filtered_grade_distribution)
-            
-            madgrades_html = f"""
-                <strong>MadGrades Data:</strong> <br>
-                {filtered_grade_distribution}
-            """
-        else:
-            madgrades_html = "<strong>No MadGrades data available.</strong>"
-            
         course_list += f"""
             <h3><strong>{course["ABBREV"]}</strong>: {course["NAME"]} </h3>
             <strong>Credits:</strong> {course['CREDITS']} <br> 
@@ -319,9 +290,8 @@ def department_page(dept_id):
             <br>
             <strong> More information </strong> <br>
             {extras_html} 
-            <strong> MadGrades </strong> <br>
-            {filtered_grade_distribution} <br>
-            <strong> GPA: </strong> {madgrades_gpa}
+            <button onclick="fetchMadGrades('{department_abbrev}', {course['ID']})">Load MadGrades Data</button>
+            <div id="madgrades-{course['ID']}"></div>
         """
 
     # Load the department template
@@ -340,6 +310,37 @@ def department_page(dept_id):
 def scrape():
     scrape_departments_and_courses()
     return jsonify({"message": "Scraping complete.", "departments": len(df)})
+
+@app.route('/fetch_madgrades/<abbrev>/<int:code>', methods=['GET'])
+def fetch_madgrades(abbrev, code):
+    #print("abbreviation " + str(abbrev))
+    #print("code " + str(code))
+    try:
+        # Fetch the course from the list
+        madgrades_course = get_madgrades_course(abbrev, code)
+        madgrades_grades = get_madgrades_grades(madgrades_course)
+
+        if madgrades_grades and "cumulative" in madgrades_grades:
+            grade_distribution = {}
+            for grade in madgrades_grades["cumulative"]:
+                total = madgrades_grades["cumulative"].get("total", 1)
+                score = round((madgrades_grades["cumulative"][grade] / total) * 100, 2) if total > 0 else 0
+                grade_distribution[grade] = score
+
+            filtered_grade_distribution = filter_grades(grade_distribution)
+            madgrades_gpa = calculate_gpa(filtered_grade_distribution)
+
+            response_data = {
+                "grades": filtered_grade_distribution,
+                "gpa": madgrades_gpa
+            }
+            return jsonify(response_data)
+        else:
+            return jsonify({"message": "No MadGrades data available."}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
     
 # SOURCE 2: setup for Flask site
 if __name__ == '__main__':
