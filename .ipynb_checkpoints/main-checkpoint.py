@@ -339,7 +339,7 @@ def fetch_madgrades(abbrev, code):
             return jsonify({"message": "No MadGrades data available."}), 404
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Course not in MadGrades DataBase"}), 500
 
     
 # SOURCE 2: setup for Flask site
