@@ -7,7 +7,7 @@ The project began as a simple web scraper for UW-Madison's departments and cours
 Please change this line to include your personal token for MadGrades' API, found in main.py
 - API_TOKEN = "PLACEHOLDER_TOKEN"
 
-The API token can be retieved from[here](https://api.madgrades.com)
+The API token can be retieved from [here](https://api.madgrades.com)
 
 # Goals
 This project, started on November 25, 2024, is a learning opportunity to:
