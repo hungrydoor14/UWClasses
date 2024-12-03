@@ -1,3 +1,6 @@
 # IPYNB Checkpoints
 .ipynb_checkpoints/
 *.ipynb_checkpoints
+
+# IPYNB files
+*.ipynb
