@@ -1,5 +1,5 @@
 # Description
-UWClasses is a personal project aimed at building a web application that scrapes and displays department and course information for the University of Wisconsin-Madison. Users can browse a list of departments and view the courses offered by each department, based on the latest scraped data.
+UWClasses is a personal project to build a web application that scrapes and displays department and course information for the University of Wisconsin-Madison. Users can browse a list of departments and view the courses offered by each department based on the latest scraped data. A click of a button will fetch grade data from MadGrades' API, if available, and present it to the user. 
 
 The project began as a simple web scraper for UW-Madison's departments and courses and evolved to include integration with MadGrade's API, allowing users to gather detailed course information efficiently, without going to both websites. Originally, the scraper would access MadGrades automatically when opening the department site for every course, but this in turn made the site slow and unresponsive. After implementing a button to fetch only on the user's request, this was fixed. 
 
