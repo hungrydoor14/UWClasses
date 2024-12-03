@@ -3,6 +3,11 @@ UWClasses is a personal project to build a web application that scrapes and disp
 
 The project began as a simple web scraper for UW-Madison's departments and courses and evolved to include integration with MadGrade's API, allowing users to gather detailed course information efficiently, without going to both websites. Originally, the scraper would access MadGrades automatically when opening the department site for every course, but this in turn made the site slow and unresponsive. After implementing a button to fetch only on the user's request, this was fixed. 
 
+# Usage
+Please change this line to include your personal token for MadGrades' API, found in main.py
+- API_TOKEN = "PLACEHOLDER_TOKEN"
+The API token can be retieved from [here](https://api.madgrades.com)
+
 # Goals
 This project, started on November 25, 2024, is a learning opportunity to:
 - Gain experience with Flask for web development.
