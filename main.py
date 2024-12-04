@@ -15,8 +15,8 @@ df = pd.DataFrame()
 with open("all_courses.json", 'r', encoding='utf-8') as file:
     courses = json.load(file)    
 
-# Attempt at using MadGrades API 
-API_TOKEN = "PLACEHOLDER_TOKEN"
+# MadGrades API Token
+API_TOKEN = "9766d059e02f47c4a5fda3ccd4b83eca"
 
 def scrape_departments_and_courses():
     """
@@ -46,7 +46,6 @@ def scrape_departments_and_courses():
                     # <li><a href="/courses/acct_i_s/">Accounting and Information Systems (ACCT I S)</a></li>
                 pattern = r'<li><a href="/courses/(.*?)/">(.+?) \(([^)]+)\)</a></li>'
                 match = re.match(pattern, str(item))
-                #print(item)            
 
                 if match:
                     dep_id = match.group(1) # used for website nav
@@ -59,7 +58,7 @@ def scrape_departments_and_courses():
                     
                     dep_url = f"https://guide.wisc.edu/courses/{dep_id}/"
 
-                    data.append({"ID" : dep_id, "ABBREV": dep_abbrev, "DEPARTMENT": dep_name, "URL" : dep_url})
+                    data.append({"CODE" : dep_id, "ABBREV": dep_abbrev, "DEPARTMENT": dep_name, "URL" : dep_url})
 
     df = pd.DataFrame(data)
     
@@ -73,7 +72,7 @@ def gather_courses(department):
     Returns:
         DataFrame: Contains details of courses for the specified department.
     """
-    # First, check if the department name is actually in the datafram
+    # First, check if the department name is actually in the dataframe
     if department in df["DEPARTMENT"].values:
         info = df.loc[df["DEPARTMENT"] == department]
                 
@@ -94,18 +93,16 @@ def gather_courses(department):
             # found issue with Zero Width Space, this is how to fix
             course_title = course_title.replace("\u200B", "")    
             
-                # old pattern: unsure why 0-9 was in there
+                # old pattern
                 # pattern = r"([A-Za-z&\-\/\s0-9]+)\s*(\d+)\s*—\s*(.+)"
             
             pattern = r"([A-Za-z&\-\/\s]+)(\d+)\s*[-—]\s*(.+)"
             match = re.match(pattern, course_title)
-            #print(course_title)
             
             if match:
-                #course_details["DEP_COURSE"] = match.group(1)
                 course_details["ABBREV"] = str(info["ABBREV"].iloc[0]) + " " + match.group(2)
                 course_details["NAME"] = match.group(3)
-                course_details["ID"] = int(match.group(2))
+                course_details["CODE"] = int(match.group(2))
             
             # CREDITS (range)
             course_credits = course.find('p', class_='courseblockcredits').text.strip()
@@ -116,7 +113,6 @@ def gather_courses(department):
                 
             # EXTRAS
             course_extras = course.find('div', class_='cb-extras')
-            #print(course_extras)
             course_extras = course.find('div', class_='cb-extras')
             if course_extras:
                 extras = []
@@ -124,9 +120,9 @@ def gather_courses(department):
                     label = extra.find('span', class_='cbextra-label')
                     data = extra.find('span', class_='cbextra-data')
                     if label and data:
-                        #print(label.text.strip())
                         label_text = label.text.strip()
-                        if label_text != "Learning Outcomes:":  # Exclude specific extras
+                        # Exclude specific extras
+                        if label_text != "Learning Outcomes:":  
                             extras.append(f"<strong>{label_text}</strong> {data.text.strip()}")
                 course_details["EXTRAS"] = " \n ".join(extras)
             else:
@@ -161,8 +157,6 @@ def get_madgrades_course(abbrev, code):
     
     for course in courses:
         number = course.get("number")
-        #print(abbrev, code)
-        #print(course)
         for subject in course.get('subjects'):
             if int(number) == int(code) and subject.get("abbreviation") == abbrev:
                 found_courses.append(course)
@@ -172,7 +166,6 @@ def get_madgrades_course(abbrev, code):
 
 def get_madgrades_grades(course):
     grades_url = course["url"] + "/grades"
-    #print(grades_url)
     headers = {
         'Authorization': 'Token token=9766d059e02f47c4a5fda3ccd4b83eca'
     }
@@ -237,14 +230,13 @@ def home():
         
     # provide dept and id as thats all I need here for now
     departments = df.to_dict(orient="records")
-    #print(df)
 
     department_list = ""
     
     # This will be the 'format' of each dept
     for dept in departments:
         department_list += f"""
-        <li><a href='/department/{dept["ID"]}'>{dept["DEPARTMENT"]}</a></li>
+        <li><a href='/department/{dept["CODE"]}'>{dept["DEPARTMENT"]}</a></li>
         """
     html = html.replace("{{ departments }}", department_list)
     html = html.replace("{{ department amount }}", str(len(departments)))
@@ -260,7 +252,7 @@ def department_page(dept_id):
         scrape_departments_and_courses()
 
     # Check if the department ID exists in the DataFrame
-    department_info = df.loc[df["ID"] == dept_id]
+    department_info = df.loc[df["CODE"] == dept_id]
     if department_info.empty:
         return f"Error: Department with ID '{dept_id}' not found.", 404
 
@@ -290,8 +282,8 @@ def department_page(dept_id):
             <br>
             <strong> More information </strong> <br>
             {extras_html} 
-            <button onclick="fetchMadGrades('{department_abbrev}', {course['ID']})">Load MadGrades Data</button>
-            <div id="madgrades-{course['ID']}"></div>
+            <button onclick="fetchMadGrades('{department_abbrev}', {course['CODE']})">Load MadGrades Data</button>
+            <div id="madgrades-{course['CODE']}"></div>
         """
 
     # Load the department template
@@ -313,8 +305,6 @@ def scrape():
 
 @app.route('/fetch_madgrades/<abbrev>/<int:code>', methods=['GET'])
 def fetch_madgrades(abbrev, code):
-    #print("abbreviation " + str(abbrev))
-    #print("code " + str(code))
     try:
         # Fetch the course from the list
         madgrades_course = get_madgrades_course(abbrev, code)
