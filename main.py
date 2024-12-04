@@ -16,7 +16,7 @@ with open("all_courses.json", 'r', encoding='utf-8') as file:
     courses = json.load(file)    
 
 # MadGrades API Token
-API_TOKEN = "9766d059e02f47c4a5fda3ccd4b83eca"
+API_TOKEN = "PLACEHOLDER_TOKEN"
 
 def scrape_departments_and_courses():
     """
